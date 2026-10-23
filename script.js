@@ -295,3 +295,119 @@ document.getElementById("diasJuntos").textContent =
           renderizarViagens();
           renderizarAdminLista();
       }
+function resetForm() {
+          document.getElementById("formViagem").reset();
+          document.getElementById("editId").value = "";
+          tempCapaBase64 = "";
+          tempAlbumBase64 = [];
+          document.getElementById("previewCapaContainer").style.display = "none";
+          document.getElementById("previewAlbumContainer").innerHTML = "";
+          document.getElementById("formTitulo").innerText = "Cadastrar Nova Viagem";
+          document.getElementById("btnCancelarEdit").style.display = "none";
+      }
+
+      function editarViagemAdmin(id) {
+          const v = viagens.find(item => item.id === id);
+          if (!v) return;
+
+          document.getElementById("editId").value = v.id;
+          document.getElementById("destinoInput").value = v.destino;
+          document.getElementById("dataInput").value = v.data;
+          document.getElementById("kmInput").value = v.km;
+          document.getElementById("motoInput").value = v.moto;
+          document.getElementById("relatoInput").value = v.relato || "";
+
+          if (v.capa) {
+              document.getElementById("capaPreviewImg").src = v.capa;
+              document.getElementById("previewCapaContainer").style.display = "block";
+          }
+
+          document.getElementById("formTitulo").innerText = "Editar Viagem";
+          document.getElementById("btnCancelarEdit").style.display = "block";
+      }
+
+      function excluirViagemAdmin(id) {
+          if (confirm("Excluir esta viagem permanentemente?")) {
+              viagens = viagens.filter(v => v.id !== id);
+              salvarDados();
+              atualizarEstatisticas();
+              renderizarViagens();
+              renderizarAdminLista();
+              mostrarToast("Viagem removida.");
+          }
+      }
+function renderizarAdminLista() {
+          const cont = document.getElementById("adminListaViagens");
+          if (viagens.length === 0) {
+              cont.innerHTML = "<p style='color:#777; font-size:0.85rem;'>Nenhuma viagem salva.</p>";
+              return;
+          }
+
+          cont.innerHTML = viagens.map(v => `
+              <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                      <strong style="color:#f4ad4e; font-size:0.85rem;">${v.destino}</strong>
+                      <span style="font-size:0.75rem; color:#aaa; margin-left: 6px;">${v.km} KM</span>
+                  </div>
+                  <div>
+                      <button class="btn-secundario" onclick="editarViagemAdmin('${v.id}')">✏️ Edit</button>
+                      <button class="btn-secundario" onclick="excluirViagemAdmin('${v.id}')" style="color:#ff5555; border-color:#ff5555;">🗑️</button>
+                  </div>
+              </div>
+          `).join('');
+}
+
+// MODAL ÁLBUM LIGHTBOX
+      function abrirAlbumModal(id) {
+          viagemAtivaModal = viagens.find(v => v.id === id);
+          if (!viagemAtivaModal) return;
+
+          fotoIndexAtiva = 0;
+          document.getElementById("modalTitulo").innerText = viagemAtivaModal.destino;
+          const dataFmt = new Date(viagemAtivaModal.data + "T00:00:00").toLocaleDateString('pt-BR');
+          document.getElementById("modalSubtitulo").innerText = `${dataFmt} • ${viagemAtivaModal.km} KM • Moto: ${viagemAtivaModal.moto}`;
+          document.getElementById("modalRelato").innerText = viagemAtivaModal.relato || "Sem história/relato cadastrado.";
+
+          renderizarCarrossel();
+          document.getElementById("modalAlbum").classList.remove("escondido");
+      }
+
+      function fecharModalAlbum() {
+          document.getElementById("modalAlbum").classList.add("escondido");
+          viagemAtivaModal = null;
+      }
+
+      function renderizarCarrossel() {
+          if (!viagemAtivaModal) return;
+          const fotos = (viagemAtivaModal.album && viagemAtivaModal.album.length > 0)
+              ? viagemAtivaModal.album
+              : [viagemAtivaModal.capa || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'];
+
+          document.getElementById("carrosselImg").src = fotos[fotoIndexAtiva];
+          document.getElementById("carrosselAtual").innerText = fotoIndexAtiva + 1;
+          document.getElementById("carrosselTotal").innerText = fotos.length;
+
+          const thumbsCont = document.getElementById("modalThumbs");
+          thumbsCont.innerHTML = fotos.map((f, idx) => `
+              <img src="${f}" class="thumb ${idx === fotoIndexAtiva ? 'ativa' : ''}" onclick="selecionarFoto(${idx})">
+          `).join('');
+      }
+
+      function mudarFoto(dir) {
+          if (!viagemAtivaModal) return;
+          const fotos = viagemAtivaModal.album || [viagemAtivaModal.capa];
+          fotoIndexAtiva = (fotoIndexAtiva + dir + fotos.length) % fotos.length;
+          renderizarCarrossel();
+      }
+
+      function selecionarFoto(idx) {
+          fotoIndexAtiva = idx;
+          renderizarCarrossel();
+}
+
+      function mostrarToast(msg) {
+          const t = document.getElementById("toast");
+          t.innerText = msg;
+          t.classList.add("visivel");
+          setTimeout(() => t.classList.remove("visivel"), 3000);
+      }
