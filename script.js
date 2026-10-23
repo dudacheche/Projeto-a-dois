@@ -146,3 +146,109 @@ function sairAdmin() {
 
 document.getElementById("diasJuntos").textContent =
     calcularDiasJuntos();
+
+// ESTATÍSTICAS E BARRA DE META
+      function atualizarEstatisticas() {
+          let totalKm = 0;
+          let kmTitan = 0;
+          let kmFan = 0;
+
+          viagens.forEach(v => {
+              const km = Number(v.km) || 0;
+              totalKm += km;
+              if (v.moto === "Titan 150") kmTitan += km;
+              else if (v.moto === "Fan 150") kmFan += km;
+              else if (v.moto === "Ambas") {
+                  kmTitan += km;
+                  kmFan += km;
+              }
+          });
+
+          // Atualizar os elementos no dashboard conforme a ordem das 3 linhas x 2 colunas
+          document.getElementById("totalViagens").innerText = viagens.length;
+          document.getElementById("kmTitan").innerText = `${kmTitan.toLocaleString()} km`;
+          document.getElementById("kmFan").innerText = `${kmFan.toLocaleString()} km`;
+          document.getElementById("kmTotal").innerText = `${totalKm.toLocaleString()} km`;
+
+          document.getElementById("kmTitanGaragem").innerText = `${kmTitan.toLocaleString()} km`;
+          document.getElementById("kmFanGaragem").innerText = `${kmFan.toLocaleString()} km`;
+
+          const pct = Math.min(Math.round((totalKm / META_PADRAO_KM) * 100), 100);
+          document.getElementById("metaAtual").innerText = `${pct}%`;
+          document.getElementById("progresso").style.width = `${pct}%`;
+          document.getElementById("textoMeta").innerText = `${totalKm.toLocaleString()} / ${META_PADRAO_KM} km`;
+      }
+
+// CARDS DE VIAGENS
+      function renderizarViagens() {
+          const lista = document.getElementById("listaViagens");
+          if (viagens.length === 0) {
+              lista.innerHTML = `<p style="text-align:center; color:#888; grid-column: 1/-1;">Nenhuma viagem cadastrada ainda.</p>`;
+              return;
+          }
+
+          lista.innerHTML = viagens.map(v => {
+              const numFotos = v.album ? v.album.length : (v.capa ? 1 : 0);
+              const dataFormatada = new Date(v.data + "T00:00:00").toLocaleDateString('pt-BR');
+              const capaImg = v.capa || (v.album && v.album[0]) || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80';
+
+              return `
+                  <div class="viagem-card" onclick="abrirAlbumModal('${v.id}')">
+                      <img class="viagem-capa" src="${capaImg}" alt="${v.destino}" onerror="this.src='https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'">
+                      
+                      <div class="viagem-topo">
+                          <span class="viagem-etiqueta">🏍️ ${v.moto}</span>
+                          <span class="viagem-data">${dataFormatada}</span>
+                      </div>
+
+                      <h3 class="viagem-cidade">${v.destino}</h3>
+                      <p class="viagem-descricao">${v.relato || 'Clique para ver as fotos e relato.'}</p>
+
+                      <div class="viagem-distancia">
+                          <span class="viagem-icone">🛣️</span>
+                          <div class="viagem-texto-distancia">
+                              <span class="viagem-km">${v.km} KM</span>
+                              <span class="viagem-legenda">Distância Rodada</span>
+                          </div>
+                      </div>
+
+                      <button class="btn-abrir-album">🖼️ Ver Álbum (${numFotos} fotos)</button>
+                  </div>
+              `;
+          }).join('');
+      }
+
+// PREVIEW DE FOTOS CARREGADAS DA GALERIA (COM COMPRESSÃO AUTOMÁTICA)
+      async function previewCapa(event) {
+          const file = event.target.files[0];
+          if (file) {
+              try {
+                  tempCapaBase64 = await comprimirImagem(file);
+                  document.getElementById("capaPreviewImg").src = tempCapaBase64;
+                  document.getElementById("previewCapaContainer").style.display = "block";
+              } catch (err) {
+                  mostrarToast("Erro ao processar imagem da capa.");
+              }
+          }
+      }
+
+      async function previewAlbum(event) {
+          const files = Array.from(event.target.files);
+          tempAlbumBase64 = [];
+          const container = document.getElementById("previewAlbumContainer");
+          container.innerHTML = "";
+
+          for (const file of files) {
+              try {
+                  const base64 = await comprimirImagem(file);
+                  tempAlbumBase64.push(base64);
+
+                  const img = document.createElement("img");
+                  img.src = base64;
+                  img.className = "mini-preview";
+                  container.appendChild(img);
+              } catch (err) {
+                  console.error("Erro ao comprimir foto do álbum:", err);
+              }
+          }
+      }
