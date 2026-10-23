@@ -252,3 +252,46 @@ document.getElementById("diasJuntos").textContent =
               }
           }
       }
+// MANIPULAÇÃO DE VIAGENS
+      function salvarViagem(e) {
+          e.preventDefault();
+          const editId = document.getElementById("editId").value;
+          const destino = document.getElementById("destinoInput").value;
+          const data = document.getElementById("dataInput").value;
+          const km = Number(document.getElementById("kmInput").value);
+          const moto = document.getElementById("motoInput").value;
+          const relato = document.getElementById("relatoInput").value;
+
+          if (editId) {
+              const index = viagens.findIndex(v => v.id === editId);
+              if (index !== -1) {
+                  viagens[index].destino = destino;
+                  viagens[index].data = data;
+                  viagens[index].km = km;
+                  viagens[index].moto = moto;
+                  viagens[index].relato = relato;
+                  if (tempCapaBase64) viagens[index].capa = tempCapaBase64;
+                  if (tempAlbumBase64.length > 0) viagens[index].album = tempAlbumBase64;
+                  mostrarToast("Viagem atualizada!");
+              }
+          } else {
+              const novaViagem = {
+                  id: Date.now().toString(),
+                  destino,
+                  data,
+                  km,
+                  moto,
+                  relato,
+                  capa: tempCapaBase64 || (tempAlbumBase64[0] || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'),
+                  album: tempAlbumBase64.length > 0 ? tempAlbumBase64 : (tempCapaBase64 ? [tempCapaBase64] : [])
+              };
+              viagens.unshift(novaViagem);
+              mostrarToast("Viagem cadastrada!");
+          }
+
+          salvarDados();
+          resetForm();
+          atualizarEstatisticas();
+          renderizarViagens();
+          renderizarAdminLista();
+      }
