@@ -5,8 +5,8 @@
 
       // Dados Exemplo Iniciais
       const VIAGENS_INICIAIS = [
-          {
-              id: "1",
+        {
+          id: "1",
               destino: "Caraguatatuba - SP",
               data: "2026-03-13",
               km: 180,
@@ -19,8 +19,7 @@
               ]
           }
       ];
-
-      // Estado Global
+// Estado Global
       let viagens = JSON.parse(localStorage.getItem("asfalto_viagens")) || VIAGENS_INICIAIS;
       let senhaAdmin = localStorage.getItem("asfalto_senha") || SENHA_PADRAO;
 
@@ -61,7 +60,7 @@
                       let width = img.width;
                       let height = img.height;
 
-                      if (width > height) {
+                    if (width > height) {
                           if (width > maxWidth) {
                               height = Math.round((height * maxWidth) / width);
                               width = maxWidth;
@@ -72,74 +71,4 @@
                               height = maxHeight;
                           }
                       }
-
-                      const canvas = document.createElement("canvas");
-                      canvas.width = width;
-                      canvas.height = height;
-
-                      const ctx = canvas.getContext("2d");
-                      ctx.drawImage(img, 0, 0, width, height);
-
-                      const dataUrl = canvas.toDataURL("image/jpeg", quality);
-                      resolve(dataUrl);
-                  };
-                  img.onerror = reject;
-                  img.src = e.target.result;
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-          });
-      }
-
-      function toggleMenu() {
-          const links = document.getElementById("menuLinks");
-          links.classList.toggle("ativo");
-      }
-
-      // MODAL ADMIN
-      function abrirModalAdmin() {
-          const links = document.getElementById("menuLinks");
-          if (links.classList.contains("ativo")) toggleMenu();
-          document.getElementById("modalAdmin").classList.remove("escondido");
-      }
-
-      function fecharModalAdmin() {
-          document.getElementById("modalAdmin").classList.add("escondido");
-      }
-
-      function autenticarAdmin() {
-          const senhaDig = document.getElementById("senhaInput").value;
-          if (senhaDig === senhaAdmin) {
-              document.getElementById("admin-login").style.display = "none";
-              document.getElementById("admin-conteudo").style.display = "block";
-              mostrarToast("Acesso autorizado!");
-              renderizarAdminLista();
-          } else {
-              mostrarToast("Senha incorreta!");
-          }
-          document.getElementById("carrosselTotal").innerText = fotos.length;
-
-          const thumbsCont = document.getElementById("modalThumbs");
-          thumbsCont.innerHTML = fotos.map((f, idx) => `
-              <img src="${f}" class="thumb ${idx === fotoIndexAtiva ? 'ativa' : ''}" onclick="selecionarFoto(${idx})">
-          `).join('');
-      }
-
-      function mudarFoto(dir) {
-          if (!viagemAtivaModal) return;
-          const fotos = viagemAtivaModal.album || [viagemAtivaModal.capa];
-          fotoIndexAtiva = (fotoIndexAtiva + dir + fotos.length) % fotos.length;
-          renderizarCarrossel();
-      }
-
-      function selecionarFoto(idx) {
-          fotoIndexAtiva = idx;
-          renderizarCarrossel();
-      }
-
-      function mostrarToast(msg) {
-          const t = document.getElementById("toast");
-          t.innerText = msg;
-          t.classList.add("visivel");
-          setTimeout(() => t.classList.remove("visivel"), 3000);
-      }
+                    
