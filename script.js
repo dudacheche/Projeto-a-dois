@@ -1,6 +1,6 @@
-// CREDENCIAIS DO SUPABASE (Substitua pelas tuas credenciais do Supabase)
-const SUPABASE_URL = "https://tizlcjmcpfoqgfmjcgwc.supabase.co"; 
-const SUPABASE_KEY = "sb_publishable_A6_ekITLKdsOuG2hv9Up7w_Dam76gTE";
+// CREDENCIAIS DO SUPABASE (Substitua pelas tuas credenciais reais do Supabase)
+const SUPABASE_URL = "https://SUA-URL.supabase.co"; 
+const SUPABASE_KEY = "SUA-CHAVE-ANON";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioLogado = null;
@@ -9,6 +9,13 @@ let viagens = [];
 let modoCadastro = false;
 
 window.addEventListener('DOMContentLoaded', async () => {
+    // Inicializar o menu hambúrguer para garantir que responde ao toque no telemóvel
+    const menuToggleBtn = document.getElementById('menuToggle');
+    if (menuToggleBtn) {
+        menuToggleBtn.addEventListener('click', toggleMenu);
+    }
+
+    // Verificar sessão ativa no Supabase Auth
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         usuarioLogado = session.user;
@@ -16,16 +23,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// FUNÇÃO DO MENU HAMBÚRGUER
 function toggleMenu() {
-    document.getElementById('menuLinks').classList.toggle('ativo');
+    const links = document.getElementById('menuLinks');
+    if (links) {
+        links.classList.toggle('ativo');
+    }
 }
 
 async function carregarPerfilEColecoes() {
     if (!usuarioLogado) return;
 
-    const { data: perfil } = await supabase.from('casais').select('*').eq('id', usuarioLogado.id).single();
+    const { data: perfil, error } = await supabase.from('casais').select('*').eq('id', usuarioLogado.id).single();
     
-    if (!perfil) {
+    if (error || !perfil) {
         abrirModal('modalConfigCasal');
         return;
     }
@@ -52,10 +63,12 @@ function atualizarInterfacePerfil() {
     document.getElementById('lblMoto2').innerText = `KM ${perfilCasal.moto2_nome}`;
 
     const selectMoto = document.getElementById('motoViagem');
-    selectMoto.innerHTML = `
-        <option value="${perfilCasal.moto1_nome}">${perfilCasal.moto1_nome}</option>
-        <option value="${perfilCasal.moto2_nome}">${perfilCasal.moto2_nome}</option>
-    `;
+    if (selectMoto) {
+        selectMoto.innerHTML = `
+            <option value="${perfilCasal.moto1_nome}">${perfilCasal.moto1_nome}</option>
+            <option value="${perfilCasal.moto2_nome}">${perfilCasal.moto2_nome}</option>
+        `;
+    }
 
     // Calcular Dias Juntos
     const inicio = new Date(perfilCasal.data_inicio);
@@ -70,6 +83,7 @@ async function carregarViagens() {
     
     let kmM1 = 0, kmM2 = 0;
     const container = document.getElementById('listaViagens');
+    if (!container) return;
     container.innerHTML = '';
 
     viagens.forEach(v => {
@@ -109,13 +123,19 @@ async function autenticarUsuario(e) {
 
     if (modoCadastro) {
         const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) return alert(error.message);
+        if (error) return alert("Erro no cadastro: " + error.message);
+        
         usuarioLogado = data.user;
-        fecharModal('modalAuth');
-        abrirModal('modalConfigCasal');
+        if (usuarioLogado) {
+            fecharModal('modalAuth');
+            abrirModal('modalConfigCasal');
+        } else {
+            alert("Conta criada! Verifica o teu e-mail se necessário ou tenta iniciar sessão.");
+        }
     } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return alert(error.message);
+        if (error) return alert("Erro ao entrar: " + error.message);
+        
         usuarioLogado = data.user;
         fecharModal('modalAuth');
         await carregarPerfilEColecoes();
@@ -135,7 +155,8 @@ async function salvarPerfilCasal(e) {
     };
 
     const { error } = await supabase.from('casais').upsert([payload]);
-    if (error) return alert(error.message);
+    if (error) return alert("Erro ao salvar perfil: " + error.message);
+    
     fecharModal('modalConfigCasal');
     await carregarPerfilEColecoes();
 }
@@ -161,11 +182,12 @@ async function salvarViagem(e) {
             capa: pUrl.publicUrl
         }]);
 
-        alert('Viagem cadastrada!');
+        alert('Viagem cadastrada com sucesso!');
         fecharModal('modalAdmin');
+        document.getElementById('formViagem')?.reset();
         await carregarViagens();
     } catch(err) {
-        alert('Erro ao salvar: ' + err.message);
+        alert('Erro ao salvar viagem: ' + err.message);
     } finally {
         btn.innerText = 'Salvar Viagem';
     }
@@ -182,5 +204,12 @@ async function deslogar() {
     location.reload();
 }
 
-function abrirModal(id) { document.getElementById(id).classList.add('ativo'); }
-function fecharModal(id) { document.getElementById(id).classList.remove('ativo'); }
+function abrirModal(id) { 
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('ativo'); 
+}
+
+function fecharModal(id) { 
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('ativo'); 
+}
