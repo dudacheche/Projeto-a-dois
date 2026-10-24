@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asfalto a dois</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav class="menu">
+    <div class="menu-logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Duda e Daniel ❤️</div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" onclick="toggleMenu()">☰</button>
+    <div class="menu-links" id="menuLinks">
+        <a href="#" onclick="toggleMenu()">🏠 Início</a>
+        <a href="#viagens" onclick="toggleMenu()">🏍️ Viagens</a>
+        <a href="#garagem" onclick="toggleMenu()">🏍️ Nossa Garagem</a>
+        <a href="#estatisticas" onclick="toggleMenu()">📊 Estatísticas</a>
+        <button onclick="abrirModalAdmin()">⚙️ Admin</button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <img src="Capacete.jpg" alt="Capacete de motociclista" onerror="this.src='https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80'">
+    <div class="overlay">
+        <h1>Asfalto a Dois</h1>
+        <p>Nossa história sobre duas rodas ❤️🏍️</p>
+    </div>
+  </header>
+
+  <section id="estatisticas">
+    <h2 class="titulo">📊 Estatísticas</h2>
+    <div class="dashboard-grid">
+        <div class="card"><h2 id="diasJuntos">0</h2><p>Dias Juntos</p></div>
+        <div class="card"><h2 id="totalViagens">0</h2><p>Viagens Realizadas</p></div>
+        <div class="card"><h2 id="kmTitan">0 km</h2><p>KM Titan 150</p></div>
+        <div class="card"><h2 id="kmFan">0 km</h2><p>KM Fan 150</p></div>
+        <div class="card"><h2 id="kmTotal">0 km</h2><p>KM Rodados Juntos</p></div>
+        <div class="card"><h2 id="metaAtual">0%</h2><p>Progresso da Meta</p></div>
+    </div>
+  </section>
+
+  <section class="meta">
+      <h3>Meta Atual de Rodagem</h3>
+      <div class="barra"><div id="progresso" style="width: 0%;"></div></div>
+      <p id="textoMeta">0 / 2000 km</p>
+  </section>
+
+  <section id="garagem">
+    <h2 class="titulo">🏍️ Nossa Garagem</h2>
+    <div class="garagem-grid">
+        <div class="moto-card-compacto">
+            <h3>🖤 Titan 150</h3><p><strong>Duda</strong> • 2013 • Preta</p>
+            <p>Cilindrada: 150cc</p><p>KM: <span id="kmTitanGaragem" class="km-destaque">0 km</span></p>
+        </div>
+        <div class="moto-card-compacto">
+            <h3>🤍 Fan 150</h3><p><strong>Daniel</strong> • 2015 • Branca</p>
+            <p>Cilindrada: 150cc</p><p>KM: <span id="kmFanGaragem" class="km-destaque">0 km</span></p>
+        </div>
+    </div>
+  </section>
+
+  <section id="viagens">
+      <h2 class="titulo">Últimas Aventuras</h2>
+      <div id="listaViagens"><!-- Viagens inseridas pelo JavaScript --></div>
+  </section>
+
+  <div id="modalAdmin" class="modal-overlay escondido">
+      <div class="modal-container">
+          <div class="modal-header"><h3>⚙️ Painel do Administrador</h3><button class="fechar" onclick="fecharModalAdmin()">&times;</button></div>
+          <div class="modal-body">
+              <div id="admin-login" style="text-align:center;padding:20px 0;">
+                  <p style="color:#d0d1d6;margin-bottom:20px;">Entre com sua conta autorizada para gerenciar as viagens.</p>
+                  <div class="form-group" style="max-width:300px;margin:0 auto 15px;">
+                      <input type="email" id="emailInput" class="form-control" placeholder="E-mail da conta Supabase" autocomplete="username" style="text-align:center;margin-bottom:10px;">
+                      <input type="password" id="senhaInput" class="form-control" placeholder="Senha da conta Supabase" autocomplete="current-password" style="text-align:center;">
+                  </div>
+                  <button id="btnEntrarAdmin" class="btn-primario" onclick="autenticarAdmin()" style="max-width:300px;">Entrar no Painel</button>
+              </div>
+              <div id="admin-conteudo" style="display:none;">
+                  <div class="admin-topo">
+                      <span class="autenticado">✓ Autenticado</span>
+                      <div><button class="btn-secundario" onclick="alterarSenhaAdmin()">🔑 Trocar Senha</button><button class="btn-secundario" onclick="sairAdmin()" style="margin-left:6px;">Sair</button></div>
+                  </div>
+                  <h4 id="formTitulo" class="form-titulo">Cadastrar Nova Viagem</h4>
+                  <form id="formViagem" onsubmit="salvarViagem(event)">
+                      <input type="hidden" id="editId" value="">
+                      <div class="form-group"><label for="destinoInput">Destino / Título da Viagem</label><input type="text" id="destinoInput" class="form-control" placeholder="Ex: Serra do Rastro da Serpente" required></div>
+                      <div class="form-duas-colunas">
+                          <div class="form-group"><label for="dataInput">Data da Viagem</label><input type="date" id="dataInput" class="form-control" required></div>
+                          <div class="form-group"><label for="kmInput">Distância (KM)</label><input type="number" id="kmInput" class="form-control" min="0" placeholder="Ex: 280" required></div>
+                      </div>
+                      <div class="form-group"><label for="motoInput">Moto Utilizada</label><select id="motoInput" class="form-control" required><option value="Titan 150">Titan 150 (Duda)</option><option value="Fan 150">Fan 150 (Daniel)</option><option value="Ambas">Ambas as Motos</option></select></div>
+                      <div class="form-group"><label for="relatoInput">Relato da viagem</label><textarea id="relatoInput" class="form-control" rows="3" placeholder="Conte um pouco sobre essa aventura..."></textarea></div>
+                      <div class="form-group"><label for="capaInput">Foto de capa</label><input type="file" id="capaInput" class="form-control" accept="image/*" onchange="previewCapa(event)"><div id="previewCapaContainer" class="preview-capa"><img id="capaPreviewImg" alt="Prévia da capa"></div></div>
+                      <div class="form-group"><label for="albumInput">Fotos do álbum</label><input type="file" id="albumInput" class="form-control" accept="image/*" multiple onchange="previewAlbum(event)"><div id="previewAlbumContainer" class="previsualizacao-fotos"></div></div>
+                      <button type="submit" class="btn-primario">Salvar viagem</button>
+                      <button type="button" id="btnCancelarEdit" class="btn-secundario btn-cancelar" onclick="resetForm()">Cancelar edição</button>
+                  </form>
+                  <hr class="separador">
+                  <h4 class="form-titulo">Viagens cadastradas</h4>
+                  <div id="adminListaViagens" class="admin-lista"></div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div id="modalAlbum" class="modal-overlay escondido">
+      <div class="modal-container">
+          <div class="modal-header"><div><h3 id="modalTitulo">Álbum da viagem</h3><p id="modalSubtitulo" class="modal-subtitulo"></p></div><button class="fechar" onclick="fecharModalAlbum()">&times;</button></div>
+          <div class="modal-body">
+              <div class="carrossel">
+                  <img id="carrosselImg" src="" alt="Foto da viagem">
+                  <button class="carrossel-btn prev" onclick="mudarFoto(-1)" aria-label="Foto anterior">❮</button>
+                  <button class="carrossel-btn next" onclick="mudarFoto(1)" aria-label="Próxima foto">❯</button>
+                  <span class="carrossel-contador"><span id="carrosselAtual">1</span> / <span id="carrosselTotal">1</span></span>
+              </div>
+              <div id="modalThumbs" class="galeria-thumbs"></div>
+              <p id="modalRelato" class="modal-relato"></p>
+          </div>
+      </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
