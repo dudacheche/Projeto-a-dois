@@ -1,6 +1,6 @@
 // CREDENCIAIS DO SUPABASE (Substitua pelas tuas credenciais reais do Supabase)
-const SUPABASE_URL = "https://SUA-URL.supabase.co"; 
-const SUPABASE_KEY = "SUA-CHAVE-ANON";
+const SUPABASE_URL = "https://tizlcjmcpfoqgfmjcgwc.supabase.co"; 
+const SUPABASE_KEY = "sb_publishable_A6_ekITLKdsOuG2hv9Up7w_Dam76gTE";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioLogado = null;
